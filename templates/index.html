@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-4 mb-0">Cricket Club Dashboard</h1>
+        <div>
+            <span class="text-muted">Welcome, {{ current_user.name }}</span>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stats-card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Total Players</h6>
+                            <h2 class="display-4 mb-0">{{ players|length }}</h2>
+                        </div>
+                        <i class="fas fa-users fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Active Teams</h6>
+                            <h2 class="display-4 mb-0">{{ teams|length }}</h2>
+                        </div>
+                        <i class="fas fa-flag fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Matches</h6>
+                            <h2 class="display-4 mb-0">{{ matches|length }}</h2>
+                        </div>
+                        <i class="fas fa-calendar-alt fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="card-title mb-0">Members</h6>
+                            <h2 class="display-4 mb-0">{{ memberships|length }}</h2>
+                        </div>
+                        <i class="fas fa-id-card fa-2x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Players Section -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Recent Players</h5>
+            <a href="{{ url_for('players') }}" class="btn btn-sm btn-primary">
+                <i class="fas fa-eye me-1"></i>View All
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Age</th>
+                            <th>Role</th>
+                            <th>Contact</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for player in players[:5] %}
+                        <tr>
+                            <td>{{ player.name }}</td>
+                            <td>{{ player.age }}</td>
+                            <td><span class="badge bg-info">{{ player.role }}</span></td>
+                            <td>{{ player.contact }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Matches Section -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Upcoming Matches</h5>
+            <a href="{{ url_for('matches') }}" class="btn btn-sm btn-primary">
+                <i class="fas fa-eye me-1"></i>View All
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Teams</th>
+                            <th>Location</th>
+                            <th>Ground</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for match in matches[:5] %}
+                        <tr>
+                            <td>{{ match.date.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                {% for team in match.teams %}
+                                    <span class="badge bg-secondary">{{ team.team_name }}</span>
+                                    {% if not loop.last %} vs {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>{{ match.location }}</td>
+                            <td>{{ match.ground }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teams Section -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Teams</h5>
+            <a href="{{ url_for('teams') }}" class="btn btn-sm btn-primary">
+                <i class="fas fa-eye me-1"></i>View All
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Team Name</th>
+                            <th>Coach</th>
+                            <th>Captain</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for team in teams %}
+                        <tr>
+                            <td>{{ team.team_name }}</td>
+                            <td>{{ team.coach }}</td>
+                            <td>
+                                {% for player in players %}
+                                    {% if player.player_id == team.captain_id %}
+                                        {{ player.name }}
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

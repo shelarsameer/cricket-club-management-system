@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-4">Schedule Match</h1>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="POST">
+                {{ form.csrf_token }}
+                
+                <div class="mb-3">
+                    <label for="date" class="form-label">{{ form.date.label }}</label>
+                    {{ form.date(class="form-control", type="date") }}
+                    {% if form.date.errors %}
+                        {% for error in form.date.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="team1" class="form-label">{{ form.team1.label }}</label>
+                    {{ form.team1(class="form-select") }}
+                    {% if form.team1.errors %}
+                        {% for error in form.team1.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="team2" class="form-label">{{ form.team2.label }}</label>
+                    {{ form.team2(class="form-select") }}
+                    {% if form.team2.errors %}
+                        {% for error in form.team2.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="location" class="form-label">{{ form.location.label }}</label>
+                    {{ form.location(class="form-control") }}
+                    {% if form.location.errors %}
+                        {% for error in form.location.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="ground" class="form-label">{{ form.ground.label }}</label>
+                    {{ form.ground(class="form-control") }}
+                    {% if form.ground.errors %}
+                        {% for error in form.ground.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="result" class="form-label">{{ form.result.label }}</label>
+                    {{ form.result(class="form-select") }}
+                    {% if form.result.errors %}
+                        {% for error in form.result.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">Schedule Match</button>
+                    <a href="{{ url_for('matches') }}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const team1Select = document.getElementById('team1');
+    const team2Select = document.getElementById('team2');
+
+    function updateTeam2Options() {
+        const selectedTeam1 = team1Select.value;
+        Array.from(team2Select.options).forEach(option => {
+            option.disabled = option.value === selectedTeam1;
+        });
+    }
+
+    function updateTeam1Options() {
+        const selectedTeam2 = team2Select.value;
+        Array.from(team1Select.options).forEach(option => {
+            option.disabled = option.value === selectedTeam2;
+        });
+    }
+
+    team1Select.addEventListener('change', updateTeam2Options);
+    team2Select.addEventListener('change', updateTeam1Options);
+
+    // Initial update
+    updateTeam1Options();
+    updateTeam2Options();
+});
+</script>
+{% endblock %} 

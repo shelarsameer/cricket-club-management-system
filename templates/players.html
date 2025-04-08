@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="display-4">Players</h1>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{{ url_for('add_player') }}" class="btn btn-primary">
+            <i class="fas fa-user-plus me-2"></i>Add Player
+        </a>
+    </div>
+</div>
+
+<!-- Search and Filter Section -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form id="searchForm" class="row g-3">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" id="searchInput" placeholder="Search players...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="roleFilter">
+                    <option value="">All Roles</option>
+                    <option value="Batsman">Batsman</option>
+                    <option value="Bowler">Bowler</option>
+                    <option value="All-Rounder">All-Rounder</option>
+                    <option value="Wicket Keeper">Wicket Keeper</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="ageFilter">
+                    <option value="">All Ages</option>
+                    <option value="18-25">18-25</option>
+                    <option value="26-30">26-30</option>
+                    <option value="31-35">31-35</option>
+                    <option value="36+">36+</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Players Grid -->
+<div class="row" id="playersGrid">
+    {% for player in players %}
+    <div class="col-md-4 mb-4 player-card" 
+         data-name="{{ player.name.lower() }}"
+         data-role="{{ player.role }}"
+         data-age="{{ player.age }}">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h5 class="card-title mb-0">{{ player.name }}</h5>
+                    <span class="badge bg-primary">{{ player.role }}</span>
+                </div>
+                <div class="player-info">
+                    <p class="mb-2">
+                        <i class="fas fa-birthday-cake me-2"></i>Age: {{ player.age }}
+                    </p>
+                    <p class="mb-2">
+                        <i class="fas fa-phone me-2"></i>Contact: {{ player.contact }}
+                    </p>
+                    {% if player.teams %}
+                    <p class="mb-2">
+                        <i class="fas fa-flag me-2"></i>Teams:
+                        {% for team in player.teams %}
+                        <span class="badge bg-secondary">{{ team.team_name }}</span>
+                        {% endfor %}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-footer bg-transparent">
+                <div class="btn-group w-100">
+                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#playerModal{{ player.player_id }}">
+                        <i class="fas fa-eye me-1"></i>View
+                    </button>
+                    <a href="{{ url_for('edit_player', player_id=player.player_id) }}" class="btn btn-outline-success">
+                        <i class="fas fa-edit me-1"></i>Edit
+                    </a>
+                    <button class="btn btn-outline-danger" onclick="deletePlayer({{ player.player_id }})">
+                        <i class="fas fa-trash me-1"></i>Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Player Modal -->
+    <div class="modal fade" id="playerModal{{ player.player_id }}" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ player.name }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Age:</strong> {{ player.age }}</p>
+                            <p><strong>Role:</strong> {{ player.role }}</p>
+                            <p><strong>Contact:</strong> {{ player.contact }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Teams:</strong></p>
+                            <ul class="list-unstyled">
+                                {% for team in player.teams %}
+                                <li><span class="badge bg-secondary">{{ team.team_name }}</span></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <a href="{{ url_for('edit_player', player_id=player.player_id) }}" class="btn btn-primary">Edit Player</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- No Players Message -->
+{% if not players %}
+<div class="alert alert-info text-center">
+    <i class="fas fa-info-circle me-2"></i>No players found. Add your first player!
+</div>
+{% endif %}
+
+<!-- Custom JavaScript -->
+<script>
+$(document).ready(function() {
+    // Search and filter functionality
+    function filterPlayers() {
+        const searchTerm = $('#searchInput').val().toLowerCase();
+        const roleFilter = $('#roleFilter').val();
+        const ageFilter = $('#ageFilter').val();
+
+        $('.player-card').each(function() {
+            const name = $(this).data('name');
+            const role = $(this).data('role');
+            const age = $(this).data('age');
+            
+            let show = name.includes(searchTerm);
+            
+            if (roleFilter && role !== roleFilter) show = false;
+            
+            if (ageFilter) {
+                const [min, max] = ageFilter.split('-').map(Number);
+                if (max) {
+                    if (age < min || age > max) show = false;
+                } else {
+                    if (age < min) show = false;
+                }
+            }
+            
+            $(this).toggle(show);
+        });
+    }
+
+    $('#searchInput').on('input', filterPlayers);
+    $('#roleFilter, #ageFilter').on('change', filterPlayers);
+    $('#searchForm').on('submit', function(e) {
+        e.preventDefault();
+        filterPlayers();
+    });
+
+    // Delete player confirmation
+    window.deletePlayer = function(playerId) {
+        if (confirm('Are you sure you want to delete this player?')) {
+            fetch(`/player/${playerId}/delete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = "{{ url_for('players') }}";
+                } else {
+                    response.json().then(data => {
+                        alert(data.error || 'Error deleting player');
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting player');
+            });
+        }
+    };
+
+    // Add hover effects
+    $('.player-card').hover(
+        function() { $(this).find('.card').addClass('shadow-lg'); },
+        function() { $(this).find('.card').removeClass('shadow-lg'); }
+    );
+});
+</script>
+{% endblock %} 

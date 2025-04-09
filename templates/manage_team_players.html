@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-4">Manage Players - {{ team.team_name }}</h1>
+            <p class="lead">Add or remove players from the team</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Current Team Players -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Current Team Players</h5>
+                </div>
+                <div class="card-body">
+                    {% if current_players %}
+                        <div class="list-group">
+                            {% for player in current_players %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">{{ player.name }}</h6>
+                                        <small class="text-muted">{{ player.role }}</small>
+                                    </div>
+                                    <form method="POST" class="d-inline">
+                                        {{ form.csrf_token }}
+                                        <input type="hidden" name="player_id" value="{{ player.player_id }}">
+                                        <input type="hidden" name="action" value="remove">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-x-circle"></i> Remove
+                                        </button>
+                                    </form>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            No players in this team yet.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Available Players -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Available Players</h5>
+                </div>
+                <div class="card-body">
+                    {% if all_players %}
+                        <div class="list-group">
+                            {% for player in all_players %}
+                                {% if player not in current_players %}
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">{{ player.name }}</h6>
+                                            <small class="text-muted">{{ player.role }}</small>
+                                        </div>
+                                        <form method="POST" class="d-inline">
+                                            {{ form.csrf_token }}
+                                            <input type="hidden" name="player_id" value="{{ player.player_id }}">
+                                            <input type="hidden" name="action" value="add">
+                                            <button type="submit" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-plus-circle"></i> Add
+                                            </button>
+                                        </form>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            No players available to add.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col">
+            <a href="{{ url_for('teams') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Teams
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %} 

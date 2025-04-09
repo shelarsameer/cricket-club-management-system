@@ -191,7 +191,8 @@ def players():
 @app.route('/teams')
 def teams():
     teams = Team.query.all()
-    return render_template('teams.html', teams=teams)
+    players = Player.query.all()
+    return render_template('teams.html', teams=teams, players=players)
 
 @app.route('/matches')
 def matches():
@@ -303,6 +304,11 @@ def delete_player(player_id):
     try:
         player = Player.query.get_or_404(player_id)
         
+        # Check if player is a captain of any team
+        teams_with_player_as_captain = Team.query.filter_by(captain_id=player_id).all()
+        for team in teams_with_player_as_captain:
+            team.captain_id = None
+        
         # Delete associated memberships
         Membership.query.filter_by(player_id=player_id).delete()
         
@@ -329,26 +335,30 @@ def edit_match(match_id):
     if not match:
         flash('Match not found!', 'danger')
         return redirect(url_for('matches'))
-        
-    teams = Team.query.all()
     
-    if request.method == 'POST':
+    form = MatchForm(obj=match)
+    form.team1.choices = [(t.team_id, t.team_name) for t in Team.query.all()]
+    form.team2.choices = form.team1.choices
+    
+    # Set initial team selections
+    if match.teams:
+        form.team1.data = match.teams[0].team_id
+        if len(match.teams) > 1:
+            form.team2.data = match.teams[1].team_id
+    
+    if form.validate_on_submit():
         try:
-            match.date = datetime.strptime(request.form['date'], '%Y-%m-%d')
-            match.location = request.form['location']
-            match.ground = request.form['ground']
-            match.result = request.form['result']
-            
-            # Update teams
-            team1_id = int(request.form['team1'])
-            team2_id = int(request.form['team2'])
+            match.date = form.date.data
+            match.location = form.location.data
+            match.ground = form.ground.data
+            match.result = form.result.data
             
             # Clear existing teams
             match.teams = []
             
             # Add new teams
-            team1 = db.session.get(Team, team1_id)
-            team2 = db.session.get(Team, team2_id)
+            team1 = db.session.get(Team, form.team1.data)
+            team2 = db.session.get(Team, form.team2.data)
             if team1 and team2:
                 match.teams.extend([team1, team2])
             
@@ -359,7 +369,7 @@ def edit_match(match_id):
             db.session.rollback()
             flash(f'Error updating match: {str(e)}', 'danger')
     
-    return render_template('edit_match.html', match=match, teams=teams)
+    return render_template('edit_match.html', form=form, match=match)
 
 @app.route('/match/<int:match_id>/delete', methods=['POST'])
 @login_required
@@ -378,6 +388,94 @@ def delete_match(match_id):
         db.session.commit()
         
         return jsonify({'success': True, 'message': 'Match deleted successfully'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/team/<int:team_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_team(team_id):
+    team = db.session.get(Team, team_id)
+    if not team:
+        flash('Team not found!', 'danger')
+        return redirect(url_for('teams'))
+    
+    form = TeamForm(obj=team)
+    form.captain_id.choices = [(p.player_id, p.name) for p in Player.query.all()]
+    
+    if form.validate_on_submit():
+        try:
+            team.team_name = form.team_name.data
+            team.coach = form.coach.data
+            team.captain_id = form.captain_id.data
+            
+            db.session.commit()
+            flash('Team updated successfully!', 'success')
+            return redirect(url_for('teams'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating team: {str(e)}', 'danger')
+    
+    return render_template('edit_team.html', form=form, team=team)
+
+@app.route('/team/<int:team_id>/players', methods=['GET', 'POST'])
+@login_required
+def manage_team_players(team_id):
+    team = db.session.get(Team, team_id)
+    if not team:
+        flash('Team not found!', 'danger')
+        return redirect(url_for('teams'))
+    
+    form = FlaskForm()  # Create a basic form for CSRF protection
+    
+    if request.method == 'POST' and form.validate_on_submit():
+        try:
+            player_id = request.form.get('player_id')
+            action = request.form.get('action')
+            
+            if action == 'add':
+                player = db.session.get(Player, player_id)
+                if player and player not in team.players:
+                    team.players.append(player)
+                    flash(f'Added {player.name} to the team!', 'success')
+            elif action == 'remove':
+                player = db.session.get(Player, player_id)
+                if player and player in team.players:
+                    team.players.remove(player)
+                    flash(f'Removed {player.name} from the team!', 'success')
+            
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error managing team players: {str(e)}', 'danger')
+    
+    # Get all players and current team players
+    all_players = Player.query.all()
+    current_players = team.players
+    
+    return render_template('manage_team_players.html', 
+                         team=team, 
+                         all_players=all_players, 
+                         current_players=current_players,
+                         form=form)
+
+@app.route('/team/<int:team_id>/delete', methods=['POST'])
+@login_required
+def delete_team(team_id):
+    try:
+        team = Team.query.get_or_404(team_id)
+        
+        # Clear players association
+        team.players = []
+        
+        # Clear matches association
+        team.matches = []
+        
+        # Delete the team
+        db.session.delete(team)
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Team deleted successfully'})
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500

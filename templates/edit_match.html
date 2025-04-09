@@ -11,61 +11,66 @@
     <div class="card">
         <div class="card-body">
             <form method="POST">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {{ form.csrf_token }}
                 
                 <div class="mb-3">
-                    <label for="date" class="form-label">Match Date</label>
-                    <input type="date" class="form-control" id="date" name="date" 
-                           value="{{ match.date.strftime('%Y-%m-%d') }}" required>
-                </div>
-
-                <div class="mb-3">
-                    <label for="team1" class="form-label">Team 1</label>
-                    <select class="form-select" id="team1" name="team1" required>
-                        <option value="">Select Team 1</option>
-                        {% for team in teams %}
-                        <option value="{{ team.team_id }}" 
-                                {% if team in match.teams %}selected{% endif %}>
-                            {{ team.team_name }}
-                        </option>
+                    <label for="date" class="form-label">{{ form.date.label }}</label>
+                    {{ form.date(class="form-control", type="date") }}
+                    {% if form.date.errors %}
+                        {% for error in form.date.errors %}
+                            <div class="text-danger">{{ error }}</div>
                         {% endfor %}
-                    </select>
+                    {% endif %}
                 </div>
 
                 <div class="mb-3">
-                    <label for="team2" class="form-label">Team 2</label>
-                    <select class="form-select" id="team2" name="team2" required>
-                        <option value="">Select Team 2</option>
-                        {% for team in teams %}
-                        <option value="{{ team.team_id }}"
-                                {% if team in match.teams %}selected{% endif %}>
-                            {{ team.team_name }}
-                        </option>
+                    <label for="team1" class="form-label">{{ form.team1.label }}</label>
+                    {{ form.team1(class="form-select") }}
+                    {% if form.team1.errors %}
+                        {% for error in form.team1.errors %}
+                            <div class="text-danger">{{ error }}</div>
                         {% endfor %}
-                    </select>
+                    {% endif %}
                 </div>
 
                 <div class="mb-3">
-                    <label for="location" class="form-label">Location</label>
-                    <input type="text" class="form-control" id="location" name="location" 
-                           value="{{ match.location }}" required>
+                    <label for="team2" class="form-label">{{ form.team2.label }}</label>
+                    {{ form.team2(class="form-select") }}
+                    {% if form.team2.errors %}
+                        {% for error in form.team2.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
                 </div>
 
                 <div class="mb-3">
-                    <label for="ground" class="form-label">Ground</label>
-                    <input type="text" class="form-control" id="ground" name="ground" 
-                           value="{{ match.ground }}" required>
+                    <label for="location" class="form-label">{{ form.location.label }}</label>
+                    {{ form.location(class="form-control") }}
+                    {% if form.location.errors %}
+                        {% for error in form.location.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
                 </div>
 
                 <div class="mb-3">
-                    <label for="result" class="form-label">Result</label>
-                    <select class="form-select" id="result" name="result">
-                        <option value="">Select Result</option>
-                        <option value="Team 1 Won" {% if match.result == 'Team 1 Won' %}selected{% endif %}>Team 1 Won</option>
-                        <option value="Team 2 Won" {% if match.result == 'Team 2 Won' %}selected{% endif %}>Team 2 Won</option>
-                        <option value="Draw" {% if match.result == 'Draw' %}selected{% endif %}>Draw</option>
-                        <option value="Not Played" {% if match.result == 'Not Played' %}selected{% endif %}>Not Played</option>
-                    </select>
+                    <label for="ground" class="form-label">{{ form.ground.label }}</label>
+                    {{ form.ground(class="form-control") }}
+                    {% if form.ground.errors %}
+                        {% for error in form.ground.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="result" class="form-label">{{ form.result.label }}</label>
+                    {{ form.result(class="form-select") }}
+                    {% if form.result.errors %}
+                        {% for error in form.result.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    {% endif %}
                 </div>
 
                 <div class="d-grid gap-2">
